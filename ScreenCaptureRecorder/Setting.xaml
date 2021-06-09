@@ -1,0 +1,23 @@
+﻿<Window x:Class="ScreenCaptureRecorder.Setting"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScreenCaptureRecorder"
+        mc:Ignorable="d"
+        Title="Setting" SizeToContent="Height" Width="300">
+    <StackPanel Orientation="Vertical" Margin="10">
+        <Label Content="硬件压缩引擎："></Label>
+        <ComboBox ItemsSource="{Binding HardEncoders}" DisplayMemberPath="Name" SelectedValuePath="AlternativeName" SelectedValue="{Binding SelectedHardware}"></ComboBox>
+        <Label Content="Audio："></Label>
+        <ComboBox ItemsSource="{Binding DeviceInfo.Audios}" DisplayMemberPath="Name" SelectedValuePath="AlternativeName" SelectedValue="{Binding SelectedAudio}"></ComboBox>
+        <Label Content="Save Path："></Label>
+        <DockPanel>            
+            <Button DockPanel.Dock="Right" Content=" Browser... " Click="SaveFolder_click"></Button>
+            <TextBox DockPanel.Dock="Right" Text="{Binding SaveFolder}" Height="22"></TextBox>
+        </DockPanel>
+        <Grid Margin="0,20,0,20">
+            <Button Content="确定" Width="100" Height="30" Click="OK_Click"></Button>
+        </Grid>
+    </StackPanel>
+</Window>
