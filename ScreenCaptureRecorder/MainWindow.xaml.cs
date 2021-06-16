@@ -95,5 +95,10 @@ namespace ScreenCaptureRecorder
         {
             this.Model.Merge();
         }
+
+        private void ResetHook_Click(object sender, RoutedEventArgs e)
+        {
+            this.Model.ResetHook();
+        }
     }
 }

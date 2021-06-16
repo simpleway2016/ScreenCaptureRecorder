@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Documents;
@@ -28,12 +29,40 @@ namespace ScreenCaptureRecorder.ViewModels
                 }
             }
         }
+
+
+        private int _CurrentFileIndex;
+        public int CurrentFileIndex
+        {
+            get => _CurrentFileIndex;
+            set
+            {
+                if (_CurrentFileIndex != value)
+                {
+                    _CurrentFileIndex = value;
+                    this.OnPropertyChanged("CurrentFileIndex", null, null);
+                }
+            }
+        }
+
         KeyboardListener KeyboardListener;
         public MainWindowModel(MainWindow mainWindow)
         {
             this._mainWindow = mainWindow;
             KeyboardListener = new KeyboardListener();
             KeyboardListener.KeyUp += KeyboardListener_KeyUp;
+
+            var config = _currentConfig = Config.GetInstance();
+            for (int i = 1; i <= 10000000; i++)
+            {
+                var path = $"{config.SaveFolder}\\output{i}.ts";
+                if (File.Exists(path))
+                {
+                    _CurrentFileIndex = i;
+                }
+                else
+                    break;
+            }
         }
 
         private void KeyboardListener_KeyUp(object sender, RawKeyEventArgs args)
@@ -62,7 +91,6 @@ namespace ScreenCaptureRecorder.ViewModels
             }
         }
 
-        int _currentFileIndex = 0;
         string _currentFilePath = null;
         List<string> _fileList = new List<string>();
         Config _currentConfig;
@@ -70,16 +98,41 @@ namespace ScreenCaptureRecorder.ViewModels
         {
             try
             {
+              
                 _mainWindow.Hide();
                 this.CurrentStatus = Status.ReadyToRun;
                 var config = _currentConfig =Config.GetInstance();
-                _currentFileIndex++;
-                _currentFilePath = $"{config.SaveFolder}\\output{_currentFileIndex}.ts";
+
+                this.CurrentFileIndex++;
+                _currentFilePath = $"{config.SaveFolder}\\output{_CurrentFileIndex}.ts";
                 _fileList.Add(_currentFilePath);
 
                 FfmpegHelper.StartCapture(config, _currentFilePath, text=> {
 
-                    if (text.Contains("error"))
+                    if(text.Contains("Failed to capture image"))
+                    {
+                        text += "   一秒后重新录制";
+                        _mainWindow.Dispatcher.Invoke(() =>
+                        {
+                            Paragraph p = new Paragraph(new Run(text));
+                            _mainWindow.txtInfo.Document.Blocks.Add(p);
+                            _mainWindow.txtInfo.ScrollToEnd();
+                        });
+                        this.CurrentStatus = Status.Stop;
+                        FfmpegHelper.CurrentCapturingProcess = null;
+                        if(File.Exists(_currentFilePath) == false)
+                        {
+                            this.CurrentFileIndex--;
+                        }
+                        Task.Run(()=> {
+                            Thread.Sleep(1000);
+                            _mainWindow.Dispatcher.Invoke(() =>
+                            {
+                                this.Start();
+                            });
+                        });
+                    }
+                    else if (text.Contains("error"))
                     {
                         _mainWindow.Dispatcher.Invoke(() =>
                         {
@@ -110,6 +163,13 @@ namespace ScreenCaptureRecorder.ViewModels
             FfmpegHelper.StopCapture();
         }
 
+        public void ResetHook()
+        {
+            KeyboardListener.Dispose();
+               KeyboardListener = new KeyboardListener();
+            KeyboardListener.KeyUp += KeyboardListener_KeyUp;
+        }
+
         public void Merge()
         {
             if (_fileList.Count == 0)
@@ -131,11 +191,18 @@ namespace ScreenCaptureRecorder.ViewModels
             }
 
             StringBuilder filedesc = new StringBuilder();
-            foreach (var path in _fileList)
+            var config = _currentConfig = Config.GetInstance();
+            for (int i = 1; i <= 10000000; i++)
             {
-                if (filedesc.Length > 0)
-                    filedesc.Append('|');
-                filedesc.Append($"{path}");
+                var path = $"{config.SaveFolder}\\output{i}.ts";
+                if (File.Exists(path))
+                {
+                    if (filedesc.Length > 0)
+                        filedesc.Append('|');
+                    filedesc.Append($"{path}");
+                }
+                else
+                    break;
             }
 
             var arg = $"-i \"concat:{filedesc}\" -c copy \"{targetpath}\"";
@@ -167,7 +234,7 @@ namespace ScreenCaptureRecorder.ViewModels
                 {
                     File.Delete(_fileList.Last());
                     _fileList.RemoveAt(_fileList.Count - 1);
-                    _currentFileIndex = _fileList.Count;
+                    _CurrentFileIndex = _fileList.Count;
                 }
                 catch (Exception ex)
                 {

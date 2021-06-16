@@ -38,7 +38,7 @@ namespace ScreenCaptureRecorder
             };
         }
 
-        static Process CurrentCapturingProcess;
+        public static Process CurrentCapturingProcess;
         public static void StartCapture(Config config,string savePath,Action<string> outputInfoHandler)
         {
 

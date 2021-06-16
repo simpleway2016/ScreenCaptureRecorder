@@ -13,5 +13,8 @@
         <Button Content="Delete this(Alt+0)" Width="100" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top" Click="Delete_Click" Margin="248,10,0,0"/>
         <Button Content="合并" Width="100" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top" Click="Merge_Click" Margin="369,10,0,0"/>
         <RichTextBox x:Name="txtInfo" HorizontalAlignment="Left" Height="315" Margin="169,81,0,0" VerticalAlignment="Top" Width="615"></RichTextBox>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="18,177,0,0" TextWrapping="Wrap" Text="{Binding CurrentFileIndex}" VerticalAlignment="Top" Width="120"/>
+        <Label Content="当前索引" HorizontalAlignment="Left" Margin="18,146,0,0" VerticalAlignment="Top"/>
+        <Button Content="重设hook" Width="100" Height="30" HorizontalAlignment="Left" VerticalAlignment="Top" Click="ResetHook_Click" Margin="634,10,0,0"/>
     </Grid>
 </Window>
